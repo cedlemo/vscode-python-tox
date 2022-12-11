@@ -6,18 +6,32 @@ export function findProjectDir() {
 	if (!docUri) {
 		throw new Error("No active editor found.");
 	}
+	const configuration = vscode.workspace.getConfiguration('tox');
+	const workspaceFolder = vscode.workspace.getWorkspaceFolder(docUri);
 
-	const workspace = vscode.workspace.getWorkspaceFolder(docUri);
-	if (workspace) {
-		const folder = workspace.uri.fsPath;
-		console.log(`tox workspace folder: ${folder}`);
-		return folder;
+	if (!workspaceFolder) {
+		const docPath = docUri.fsPath;
+		const docDir = path.dirname(docPath);
+		console.log(`tox doc path: ${docPath} -> ${docDir}`);
+		return docDir;
+	}
+	
+	let folder = workspaceFolder.uri.fsPath;
+
+	if(configuration.cwd) {
+		let toxRootFolder = configuration.cwd.replace('${workspaceFolder}', workspaceFolder.uri.fsPath);
+		toxRootFolder = configuration.cwd.replace('${fileWorkspaceFolder}', path.dirname(docUri.fsPath));
+		
+		if (!path.isAbsolute(toxRootFolder)) {
+			folder = path.join(workspaceFolder.uri.fsPath, toxRootFolder);
+		} else {
+			folder = toxRootFolder;
+		}
 	}
 
-	const docPath = docUri.fsPath;
-	const docDir = path.dirname(docPath);
-	console.log(`tox doc path: ${docPath} -> ${docDir}`);
-	return docDir;
+	folder = path.normalize(folder);
+	console.log(`tox workspace folder: ${folder}`);
+	return folder;
 }
 
 /**

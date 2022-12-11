@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as util from 'util';
 import { runTox } from './run';
+import {findProjectDir} from './utils';
 
 export function create() {
 	const controller = vscode.tests.createTestController('toxTestController', 'Tox Testing');
@@ -22,7 +23,7 @@ export function create() {
 	{
 		const run = controller.createTestRun(request);
 		const queue: vscode.TestItem[] = [];
-		
+
 		if (request.include) {
 			request.include.forEach(test => queue.push(test));
 		}
@@ -37,13 +38,14 @@ export function create() {
 			
 			const start = Date.now();
 			try {
-				const cwd = vscode.workspace.getWorkspaceFolder(test.uri!)!.uri.path;
+				const cwd = findProjectDir();
 				runTox([test.label], cwd);
 				run.passed(test, Date.now() - start);
 			} 
 			catch (e: any) {
 				run.failed(test, new vscode.TestMessage(e.message), Date.now() - start);
 			}
+			test.children.forEach(test => queue.push(test)); // allow to launch all environments at once from the Testing view
 		}
 		
 		// Make sure to end the run after all tests have been executed:

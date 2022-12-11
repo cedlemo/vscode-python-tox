@@ -49,6 +49,16 @@
 	],
 	"main": "./out/extension.js",
 	"contributes": {
+		"configuration": [{
+			"title": "Tox Configuration",
+			"properties": {
+				"tox.cwd": {
+					"type": "string",
+					"scope": "resource",
+					"description": "The path to the tox config file"
+				}
+			}
+		}],
 		"taskDefinitions": [
 			{
 				"type": "tox",
